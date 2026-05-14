@@ -126,7 +126,7 @@ function renderTable() {
       <td>
         <div class="product-cell">
           ${p.imageUrl
-            ? `<img src="${escHtml(p.imageUrl)}" alt="${escHtml(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%231a1d2b%22/%3E%3Ctext x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23475569%22 font-size=%2218%22%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E'" />`
+            ? `<img src="${escHtml(p.imageUrl)}" alt="${escHtml(p.name)}" class="product-thumb" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22${document.documentElement.getAttribute('data-theme') === 'light' ? '%23f1f5f9' : '%231a1d2b'}%22/%3E%3Ctext x=%2250%25%22 y=%2255%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23475569%22 font-size=%2218%22%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E'" />`
             : `<div class="product-thumb" style="display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>`
           }
           <div>
