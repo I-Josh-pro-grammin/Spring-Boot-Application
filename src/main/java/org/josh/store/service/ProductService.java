@@ -2,6 +2,9 @@ package org.josh.store.service;
 
 import org.josh.store.model.Product;
 import org.josh.store.repository.ProductRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +24,8 @@ public class ProductService {
     // ─── Read ─────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<Product> getAllProducts(Pageable pageable) {
+        return productRepository.findAll(pageable).getContent();
     }
 
     @Transactional(readOnly = true)
@@ -36,16 +39,16 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<Product> searchProducts(String query) {
+    public List<Product> searchProducts(String query, Pageable pageable) {
         if (query == null || query.isBlank()) {
-            return getAllProducts();
+            return getAllProducts(pageable);
         }
-        return productRepository.searchProducts(query.trim());
+        return productRepository.searchProducts(query.trim(), pageable);
     }
 
     @Transactional(readOnly = true)
-    public List<Product> getProductsByCategory(String category) {
-        return productRepository.findByCategoryIgnoreCase(category);
+    public List<Product> getProductsByCategory(String category, Pageable pageable) {
+        return productRepository.findByCategoryIgnoreCase(category, pageable);
     }
 
     @Transactional(readOnly = true)

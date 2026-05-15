@@ -26,16 +26,18 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String category) {
+            @RequestParam(required = false) String category,
+            org.springframework.data.domain.Pageable pageable
+    ) {
 
         List<Product> products;
 
         if (search != null && !search.isBlank()) {
-            products = productService.searchProducts(search);
+            products = productService.searchProducts(search, pageable);
         } else if (category != null && !category.isBlank()) {
-            products = productService.getProductsByCategory(category);
+            products = productService.getProductsByCategory(category, pageable);
         } else {
-            products = productService.getAllProducts();
+            products = productService.getAllProducts(pageable);
         }
         return ResponseEntity.ok(products);
     }
