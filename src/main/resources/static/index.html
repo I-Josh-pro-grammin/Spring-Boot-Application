@@ -101,6 +101,24 @@
       <select id="category-filter" class="category-filter">
         <option value="">All Categories</option>
       </select>
+
+      <div class="price-range-wrap">
+        <input type="number" id="min-price" class="price-input" placeholder="Min $" step="0.01" />
+        <span class="range-sep">—</span>
+        <input type="number" id="max-price" class="price-input" placeholder="Max $" step="0.01" />
+      </div>
+    </div>
+
+    <!-- Category Insights (Visible when category selected) -->
+    <div id="category-insights" class="insights-bar" style="display:none">
+      <div class="insight-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Inventory Value: <strong id="cat-inv-val">$0.00</strong></span>
+      </div>
+      <button class="btn-tool" id="btn-bulk-update">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Bulk Price Update
+      </button>
     </div>
 
     <!-- Table -->
@@ -211,6 +229,30 @@
         <button class="btn-secondary" id="delete-cancel">Cancel</button>
         <button class="btn-danger" id="delete-confirm">Delete</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ BULK UPDATE MODAL ══════════════════════ -->
+  <div class="modal-overlay" id="bulk-overlay" role="dialog" aria-modal="true">
+    <div class="modal modal--sm">
+      <div class="modal-header">
+        <h2 class="modal-title">Bulk Price Update</h2>
+        <button class="modal-close" id="bulk-close" aria-label="Close">&#x2715;</button>
+      </div>
+      <form id="bulk-form">
+        <div class="modal-body">
+          <p>Update all prices in <strong id="bulk-cat-name"></strong> by a percentage.</p>
+          <div class="form-group" style="margin-top:15px">
+            <label for="bulk-percentage">Percentage Change (%)</label>
+            <input type="number" id="bulk-percentage" placeholder="e.g. 10 or -5" step="0.1" required />
+            <small style="color:var(--text-muted)">Use positive for increase, negative for decrease.</small>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="bulk-cancel">Cancel</button>
+          <button type="submit" class="btn-primary" id="bulk-submit">Apply Update</button>
+        </div>
+      </form>
     </div>
   </div>
 

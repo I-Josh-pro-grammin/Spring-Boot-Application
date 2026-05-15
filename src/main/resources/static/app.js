@@ -63,6 +63,10 @@ const api = {
   create:      (data)     => apiFetch(API, { method: 'POST', body: JSON.stringify(data) }),
   update:      (id, data) => apiFetch(`${API}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete:      (id)       => apiFetch(`${API}/${id}`, { method: 'DELETE' }),
+  // Advanced
+  getByPriceRange: (min, max) => apiFetch(`${API}/price-range?min=${min}&max=${max}`),
+  getInvValue:     (cat)      => apiFetch(`${API}/inventory-value?category=${encodeURIComponent(cat)}`),
+  bulkUpdate:      (cat, pct) => apiFetch(`${API}/update-prices?category=${encodeURIComponent(cat)}&percentage=${pct}`, { method: 'PATCH' }),
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -90,17 +94,40 @@ async function loadProducts() {
 function applyFilters() {
   const search   = $searchInput.value.trim().toLowerCase();
   const category = $categoryFilter.value;
+  const minPrice = parseFloat(document.getElementById('min-price').value) || 0;
+  const maxPrice = parseFloat(document.getElementById('max-price').value) || Infinity;
 
   filteredList = allProducts.filter(p => {
     const matchSearch = !search ||
       p.name.toLowerCase().includes(search) ||
       (p.description || '').toLowerCase().includes(search);
     const matchCat = !category || p.category === category;
-    return matchSearch && matchCat;
+    const matchPrice = p.price >= minPrice && p.price <= maxPrice;
+    return matchSearch && matchCat && matchPrice;
   });
+
+  // Handle Category Insights (Native SQL Demo)
+  const $insights = document.getElementById('category-insights');
+  if (category) {
+    $insights.style.display = 'flex';
+    fetchInventoryValue(category);
+  } else {
+    $insights.style.display = 'none';
+  }
 
   currentPage = 1;
   renderTable();
+}
+
+async function fetchInventoryValue(category) {
+  const $valEl = document.getElementById('cat-inv-val');
+  $valEl.textContent = '...';
+  try {
+    const res = await api.getInvValue(category);
+    $valEl.textContent = `$${parseFloat(res.totalInventoryValue).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+  } catch (err) {
+    $valEl.textContent = 'Error';
+  }
 }
 
 function renderTable() {
@@ -437,6 +464,50 @@ $searchClear.addEventListener('click', () => {
 
 // Category filter
 $categoryFilter.addEventListener('change', applyFilters);
+
+// Price filters
+document.getElementById('min-price').addEventListener('input', applyFilters);
+document.getElementById('max-price').addEventListener('input', applyFilters);
+
+// ═══════════════════════════════════════════════════════════
+//  BULK UPDATE
+// ═══════════════════════════════════════════════════════════
+const $bulkOverlay = document.getElementById('bulk-overlay');
+const $bulkForm    = document.getElementById('bulk-form');
+
+document.getElementById('btn-bulk-update').addEventListener('click', () => {
+  const cat = $categoryFilter.value;
+  if (!cat) return;
+  document.getElementById('bulk-cat-name').textContent = cat;
+  $bulkOverlay.classList.add('open');
+});
+
+document.getElementById('bulk-close').addEventListener('click', () => $bulkOverlay.classList.remove('open'));
+document.getElementById('bulk-cancel').addEventListener('click', () => $bulkOverlay.classList.remove('open'));
+
+$bulkForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const cat = $categoryFilter.value;
+  const pct = parseFloat(document.getElementById('bulk-percentage').value);
+  if (isNaN(pct)) return;
+
+  const btn = document.getElementById('bulk-submit');
+  btn.disabled = true;
+  btn.textContent = 'Updating...';
+
+  try {
+    const res = await api.bulkUpdate(cat, pct);
+    showToast(`${res.updatedCount} products updated in ${cat}`, 'success');
+    $bulkOverlay.classList.remove('open');
+    $bulkForm.reset();
+    await loadProducts();
+  } catch (err) {
+    showToast('Bulk update failed: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Apply Update';
+  }
+});
 
 // Sidebar toggle (mobile)
 $menuBtn.addEventListener('click', () => $sidebar.classList.toggle('open'));

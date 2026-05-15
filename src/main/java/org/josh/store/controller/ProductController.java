@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,36 @@ public class ProductController {
         productService.deleteProduct(id);
         Map<String, String> response = new HashMap<>();
         response.put("message", "Product deleted successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    // ─── Advanced Queries ─────────────────────────────────────────────────────
+
+    @GetMapping("/price-range")
+    public ResponseEntity<List<Product>> getByPriceRange(
+            @RequestParam BigDecimal min,
+            @RequestParam BigDecimal max) {
+        return ResponseEntity.ok(productService.getProductsByPriceRange(min, max));
+    }
+
+    @GetMapping("/inventory-value")
+    public ResponseEntity<Map<String, Object>> getInventoryValue(@RequestParam String category) {
+        BigDecimal value = productService.getInventoryValueByCategory(category);
+        Map<String, Object> response = new HashMap<>();
+        response.put("category", category);
+        response.put("totalInventoryValue", value);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/update-prices")
+    public ResponseEntity<Map<String, Object>> updatePrices(
+            @RequestParam String category,
+            @RequestParam double percentage) {
+        int updatedCount = productService.updatePricesByCategory(category, percentage);
+        Map<String, Object> response = new HashMap<>();
+        response.put("category", category);
+        response.put("updatedCount", updatedCount);
+        response.put("message", "Prices updated by " + percentage + "%");
         return ResponseEntity.ok(response);
     }
 

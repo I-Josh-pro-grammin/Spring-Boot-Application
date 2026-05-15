@@ -5,6 +5,7 @@ import org.josh.store.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -56,6 +57,12 @@ public class ProductService {
     // ─── Create ───────────────────────────────────────────────────────────────
 
     public Product createProduct(Product product) {
+        if (product.getStockQuantity() < 0) {
+            throw new RuntimeException("Stock quantity cannot be negative");
+        }
+        if (product.getPrice() != null && product.getPrice().compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("Price cannot be negative");
+        }
         return productRepository.save(product);
     }
 
@@ -94,5 +101,22 @@ public class ProductService {
     @Transactional(readOnly = true)
     public long getLowStockCount() {
         return productRepository.findByStockQuantityLessThan(10).size();
+    }
+
+    // ─── Advanced Queries ─────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<Product> getProductsByPriceRange(BigDecimal min, BigDecimal max) {
+        return productRepository.findByPriceRange(min, max);
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getInventoryValueByCategory(String category) {
+        return productRepository.getInventoryValueByCategory(category);
+    }
+
+    public int updatePricesByCategory(String category, double percentage) {
+        BigDecimal factor = BigDecimal.valueOf(1 + (percentage / 100));
+        return productRepository.updatePricesByCategory(category, factor);
     }
 }
