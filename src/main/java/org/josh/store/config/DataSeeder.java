@@ -11,7 +11,8 @@ import java.math.BigDecimal;
 @Configuration
 public class DataSeeder {
 
-    @Bean
+    @SuppressWarnings("null")
+@Bean
     CommandLineRunner seedDatabase(ProductRepository repository) {
         return args -> {
             if (repository.count() == 0) {

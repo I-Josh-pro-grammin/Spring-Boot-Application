@@ -27,6 +27,10 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Product getProductById(Long id) {
+        if (id == null) {
+            throw new RuntimeException("Product ID cannot be null");
+        }
+        
         return productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
@@ -82,7 +86,13 @@ public class ProductService {
     // ─── Delete ───────────────────────────────────────────────────────────────
 
     public void deleteProduct(Long id) {
+        if (id == null) {
+            throw new RuntimeException("Product ID cannot be null");
+        }
         Product existing = getProductById(id);
+        if (existing == null) {
+            throw new RuntimeException("Product not found with id: " + id);
+        }
         productRepository.delete(existing);
     }
 
