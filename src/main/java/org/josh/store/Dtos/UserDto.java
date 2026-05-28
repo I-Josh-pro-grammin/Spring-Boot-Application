@@ -1,42 +1,30 @@
-package org.josh.store.model;
+package org.josh.store.Dtos;
 
-import jakarta.persistence.*;
-
-import java.rmi.server.UID;
 import java.util.Date;
 import java.util.UUID;
 
-@Entity
-@Table(name = "users")
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+public class UserDto {
     private UUID id;
-
     private String username;
-
-    private String password;
-
     private String email;
-
     private Date createdAt;
 
-    public User() {};
+    public UserDto() {};
 
-    public User(UUID id, String username, String password, String email, Date createdAt) {
+    public UserDto(UUID id, String username, String email, Date createdAt) {
         this.id = id;
         this.username = username;
-        this.password = password;
         this.email = email;
         this.createdAt = createdAt;
     }
 
-    public User(String email, String username, String password, Date date) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-        this.createdAt = createdAt;
-    }
+//    public String getPassword() {
+//        return password;
+//    }
+
+//    public void setPassword(String password) {
+//        this.password = password;
+//    }
 
     public UUID getId() {
         return id;
@@ -54,14 +42,6 @@ public class User {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getEmail() {
         return email;
     }
@@ -77,6 +57,4 @@ public class User {
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-
-
 }
