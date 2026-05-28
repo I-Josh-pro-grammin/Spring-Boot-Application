@@ -1,5 +1,6 @@
 package org.josh.store.controller;
 
+import org.apache.tomcat.util.json.JSONParser;
 import org.josh.store.Dtos.LoginAndRegisterResponseDto;
 import org.josh.store.Dtos.LoginUserDto;
 import org.josh.store.Dtos.RegisterUserDto;
@@ -26,6 +27,11 @@ public class authController {
 
     @PostMapping("register")
     public ResponseEntity register(@RequestBody RegisterUserDto user) {
+        User foundUser = userService.registerUser(user);
+        if(foundUser == null){
+            return new ResponseEntity("User already exists", HttpStatusCode.valueOf(400));
+        }
+
         String token = jwtService.generateToken(user.getEmail());
 
         return new ResponseEntity(new LoginAndRegisterResponseDto(token), HttpStatusCode.valueOf(201));
@@ -33,6 +39,12 @@ public class authController {
 
     @PostMapping("login")
     public ResponseEntity login(@RequestBody LoginUserDto user) {
+        UserDto foundUser = userService.login(user);
+
+        if(foundUser == null) {
+            return new ResponseEntity("User not found", HttpStatusCode.valueOf(400));
+        }
+
         String token = jwtService.generateToken(user.getEmail());
 
         return ResponseEntity.ok(new LoginAndRegisterResponseDto(token));

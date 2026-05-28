@@ -30,6 +30,13 @@ public class UserService {
             System.out.println("Email or password or username is empty");
         }
 
+        User foundUser = userRepository.findByEmail(userDto.getEmail());
+
+        if(foundUser != null) {
+            System.out.println("User already exists");
+            return null;
+        }
+
         String encodedPassword = passwordEncoder.encode(userDto.getPassword());
 
         User user = new User(userDto.getEmail(), userDto.getUsername(), encodedPassword, new Date());
@@ -60,12 +67,12 @@ public class UserService {
 
         if(foundUser == null) {
             System.out.println("User not found");
-            throw new RuntimeException("User not found");
+            return  null;
         }
 
-        if(passwordEncoder.matches(user.getPassword(), foundUser.getPassword()))  {
+        if(passwordEncoder.matches(foundUser.getPassword(), user.getPassword()))  {
             System.out.println("password is incorrect");
-            throw  new RuntimeException("Password is incorrect");
+            throw new RuntimeException("Password is incorrect");
         }
 
         return new UserDto(
