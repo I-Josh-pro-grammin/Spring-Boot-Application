@@ -35,7 +35,7 @@ public class User {
         this.username = username;
         this.password = password;
         this.email = email;
-        this.createdAt = createdAt;
+        this.createdAt = date;
     }
 
     public UUID getId() {

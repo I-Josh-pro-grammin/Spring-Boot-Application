@@ -51,8 +51,8 @@ public class UserService {
 
         return new UserDto(
                 user.getId(),
-                user.getEmail(),
                 user.getUsername(),
+                user.getEmail(),
                 user.getCreatedAt()
         );
     }
@@ -70,15 +70,15 @@ public class UserService {
             return  null;
         }
 
-        if(passwordEncoder.matches(foundUser.getPassword(), user.getPassword()))  {
+        if(!passwordEncoder.matches(user.getPassword(), foundUser.getPassword()))  {
             System.out.println("password is incorrect");
             throw new RuntimeException("Password is incorrect");
         }
 
         return new UserDto(
                 foundUser.getId(),
-                foundUser.getEmail(),
                 foundUser.getUsername(),
+                foundUser.getEmail(),
                 foundUser.getCreatedAt()
         );
     }
