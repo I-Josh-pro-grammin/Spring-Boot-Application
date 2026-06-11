@@ -41,6 +41,9 @@ class ProductControllerTest {
     @MockBean
     private JwtService jwtService;
 
+    @MockBean
+    private org.josh.store.service.CustomUserDetailsService customUserDetailsService;
+
     @Test
     @WithMockUser
     void testGetAllProducts() throws Exception {

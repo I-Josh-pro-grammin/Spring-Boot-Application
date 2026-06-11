@@ -42,15 +42,22 @@ const $menuBtn  = document.getElementById('menu-btn');
 //  API HELPERS
 // ═══════════════════════════════════════════════════════════
 async function apiFetch(url, options = {}) {
-  const defaults = {
-    headers: { 'Content-Type': 'application/json' },
-  };
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  const defaults = { headers };
+
   const res = await fetch(url, { ...defaults, ...options });
+  if (res.status === 401 || res.status === 403) {
+    logout();
+    throw new Error('Authentication expired or required. Please sign in again.');
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unknown error' }));
     throw new Error(err.error || `HTTP ${res.status}`);
   }
-  // DELETE returns {message} not a product
   if (res.status === 204) return null;
   return res.json();
 }
@@ -74,6 +81,10 @@ const api = {
   triggerScheduler:      ()     => apiFetch('/api/scheduler/trigger', { method: 'POST' }),
   getSchedulerLogs:      ()     => apiFetch('/api/scheduler/logs'),
   clearSchedulerLogs:    ()     => apiFetch('/api/scheduler/logs', { method: 'DELETE' }),
+
+  // Auth APIs
+  login:    (email, password) => apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (username, email, password) => apiFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ username, email, password }) }),
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -681,7 +692,109 @@ document.getElementById('btn-clear-logs').addEventListener('click', async () => 
 });
 
 // ═══════════════════════════════════════════════════════════
+//  AUTHENTICATION SESSION HANDLERS
+// ═══════════════════════════════════════════════════════════
+const $authView     = document.getElementById('auth-view');
+const $loginForm    = document.getElementById('login-form');
+const $registerForm = document.getElementById('register-form');
+const $toRegister   = document.getElementById('to-register');
+const $toLogin      = document.getElementById('to-login');
+const $btnLogout    = document.getElementById('btn-logout');
+
+function logout() {
+  localStorage.removeItem('token');
+  $authView.style.display = 'flex';
+  document.getElementById('sidebar').style.display = 'none';
+  document.querySelector('.main-content').style.display = 'none';
+  clearInterval(logPollInterval);
+  logPollInterval = null;
+}
+
+function checkAuth() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    $authView.style.display = 'flex';
+    document.getElementById('sidebar').style.display = 'none';
+    document.querySelector('.main-content').style.display = 'none';
+  } else {
+    $authView.style.display = 'none';
+    document.getElementById('sidebar').style.display = '';
+    document.querySelector('.main-content').style.display = '';
+    switchTab('products');
+    loadProducts();
+  }
+}
+
+// Auth toggle views
+$toRegister.addEventListener('click', (e) => {
+  e.preventDefault();
+  $loginForm.style.display = 'none';
+  $registerForm.style.display = 'block';
+  document.getElementById('auth-title').textContent = 'Create Account';
+  document.getElementById('auth-subtitle').textContent = 'Register to start managing your warehouse';
+});
+
+$toLogin.addEventListener('click', (e) => {
+  e.preventDefault();
+  $loginForm.style.display = 'block';
+  $registerForm.style.display = 'none';
+  document.getElementById('auth-title').textContent = 'Welcome to StoreVault';
+  document.getElementById('auth-subtitle').textContent = 'Please sign in to access your inventory';
+});
+
+// Auth form submissions
+$loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  
+  const submitBtn = $loginForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Signing In...';
+  
+  try {
+    const res = await api.login(email, password);
+    localStorage.setItem('token', res.token);
+    showToast('Signed in successfully!', 'success');
+    checkAuth();
+  } catch (err) {
+    showToast('Login failed: ' + err.message, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Sign In';
+  }
+});
+
+$registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('register-username').value.trim();
+  const email = document.getElementById('register-email').value.trim();
+  const password = document.getElementById('register-password').value;
+  
+  const submitBtn = $registerForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Registering...';
+  
+  try {
+    const res = await api.register(username, email, password);
+    localStorage.setItem('token', res.token);
+    showToast('Account created successfully!', 'success');
+    checkAuth();
+  } catch (err) {
+    showToast('Registration failed: ' + err.message, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create Account';
+  }
+});
+
+$btnLogout.addEventListener('click', (e) => {
+  e.preventDefault();
+  logout();
+});
+
+// ═══════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════
 initTheme();
-loadProducts();
+checkAuth();

@@ -41,6 +41,9 @@ class AuthControllerTest {
     @MockBean
     private JwtService jwtService;
 
+    @MockBean
+    private org.josh.store.service.CustomUserDetailsService customUserDetailsService;
+
     @Test
     void testRegister_Success() throws Exception {
         // Arrange
