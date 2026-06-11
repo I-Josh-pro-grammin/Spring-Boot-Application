@@ -609,11 +609,81 @@ function switchTab(tab) {
   }
 }
 
+// Translate cron expression to UI controls
+function cronToUi(cron) {
+  cron = (cron || '').trim();
+  const parts = cron.split(/\s+/);
+  
+  const $mode = document.getElementById('scheduler-mode');
+  const $time = document.getElementById('scheduler-time');
+  const $minute = document.getElementById('scheduler-minute');
+  const $cron = document.getElementById('scheduler-cron');
+  
+  // Default values
+  $time.value = '12:00';
+  $minute.value = '0';
+  $cron.value = cron;
+  
+  if (cron === '*/10 * * * * *') {
+    $mode.value = '10s';
+  } else if (cron === '0 * * * * *') {
+    $mode.value = 'minute';
+  } else if (parts.length === 6 && parts[0] === '0' && parts[1] !== '*' && parts[2] === '*' && parts[3] === '*' && parts[4] === '*' && parts[5] === '*') {
+    $mode.value = 'hourly';
+    $minute.value = parts[1];
+  } else if (parts.length === 6 && parts[0] === '0' && parts[1] !== '*' && parts[2] !== '*' && parts[3] === '*' && parts[4] === '*' && parts[5] === '*') {
+    $mode.value = 'daily';
+    const hour = parts[2].padStart(2, '0');
+    const min = parts[1].padStart(2, '0');
+    $time.value = `${hour}:${min}`;
+  } else {
+    $mode.value = 'custom';
+  }
+  
+  updateSchedulerUiVisibility();
+}
+
+// Translate UI controls to cron expression
+function uiToCron() {
+  const mode = document.getElementById('scheduler-mode').value;
+  const timeVal = document.getElementById('scheduler-time').value || '12:00';
+  const minuteVal = parseInt(document.getElementById('scheduler-minute').value, 10) || 0;
+  const cronVal = document.getElementById('scheduler-cron').value.trim();
+  
+  if (mode === '10s') {
+    return '*/10 * * * * *';
+  } else if (mode === 'minute') {
+    return '0 * * * * *';
+  } else if (mode === 'hourly') {
+    return `0 ${minuteVal} * * * *`;
+  } else if (mode === 'daily') {
+    const [hour, min] = timeVal.split(':');
+    const h = parseInt(hour, 10);
+    const m = parseInt(min, 10);
+    return `0 ${m} ${h} * * *`;
+  } else {
+    return cronVal;
+  }
+}
+
+// Show/hide time or custom cron controls based on frequency
+function updateSchedulerUiVisibility() {
+  const mode = document.getElementById('scheduler-mode').value;
+  
+  const $timeContainer = document.getElementById('scheduler-time-container');
+  const $minuteContainer = document.getElementById('scheduler-minute-container');
+  const $cronContainer = document.getElementById('scheduler-cron-container');
+  
+  $timeContainer.style.display = (mode === 'daily') ? 'flex' : 'none';
+  $minuteContainer.style.display = (mode === 'hourly') ? 'flex' : 'none';
+  $cronContainer.style.display = (mode === 'custom') ? 'flex' : 'none';
+}
+
 async function loadSchedulerConfig() {
   try {
     const config = await api.getSchedulerConfig();
     document.getElementById('scheduler-enabled').checked = config.enabled;
-    document.getElementById('scheduler-cron').value = config.cronExpression;
+    cronToUi(config.cronExpression);
   } catch (err) {
     showToast('Failed to load scheduler configuration: ' + err.message, 'error');
   }
@@ -644,17 +714,12 @@ async function loadSchedulerLogs() {
 $navProducts.addEventListener('click', (e) => { e.preventDefault(); switchTab('products'); });
 $navScheduler.addEventListener('click', (e) => { e.preventDefault(); switchTab('scheduler'); });
 
-document.querySelectorAll('.preset-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.getElementById('scheduler-cron').value = btn.dataset.cron;
-    showToast(`Preset selected: ${btn.textContent}`, 'success');
-  });
-});
+document.getElementById('scheduler-mode').addEventListener('change', updateSchedulerUiVisibility);
 
 document.getElementById('scheduler-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const enabled = document.getElementById('scheduler-enabled').checked;
-  const cronExpression = document.getElementById('scheduler-cron').value.trim();
+  const cronExpression = uiToCron();
   
   const btn = document.getElementById('btn-save-scheduler');
   btn.disabled = true;

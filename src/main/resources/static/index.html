@@ -182,17 +182,38 @@
               </label>
             </div>
             
+            <!-- Dynamic Schedule Mode Selection -->
             <div class="form-group" style="margin-top: 20px">
-              <label for="scheduler-cron">Cron Expression</label>
+              <label for="scheduler-mode">Schedule Type</label>
+              <select id="scheduler-mode">
+                <option value="10s">Every 10 Seconds (Developer)</option>
+                <option value="minute">Every Minute</option>
+                <option value="hourly">Hourly</option>
+                <option value="daily">Daily (At specific time)</option>
+                <option value="custom">Custom Cron Expression</option>
+              </select>
+            </div>
+
+            <!-- Normal Clock / Daily Time Picker (Shown only for Daily) -->
+            <div class="form-group" id="scheduler-time-container" style="margin-top: 15px; display: none;">
+              <label for="scheduler-time">Schedule Time (Clock)</label>
+              <div class="clock-picker-wrap">
+                <input type="time" id="scheduler-time" value="12:00" />
+                <span class="clock-picker-icon">🕒</span>
+              </div>
+            </div>
+
+            <!-- Hourly Minute Selector (Shown only for Hourly) -->
+            <div class="form-group" id="scheduler-minute-container" style="margin-top: 15px; display: none;">
+              <label for="scheduler-minute">Run At Minute (0-59)</label>
+              <input type="number" id="scheduler-minute" min="0" max="59" value="0" />
+            </div>
+
+            <!-- Advanced Custom Cron Expression (Shown only for Custom) -->
+            <div class="form-group" id="scheduler-cron-container" style="margin-top: 15px; display: none;">
+              <label for="scheduler-cron">Custom Cron Expression</label>
               <input type="text" id="scheduler-cron" placeholder="e.g. 0 0 * * * *" required />
               <small style="color:var(--text-muted); margin-top: 4px; display: block;">Spring Cron format (6 fields): second minute hour day month day-of-week</small>
-            </div>
-            
-            <div class="cron-presets" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
-              <button type="button" class="preset-btn" data-cron="*/10 * * * * *">Every 10s (Dev)</button>
-              <button type="button" class="preset-btn" data-cron="0 * * * * *">Every Minute</button>
-              <button type="button" class="preset-btn" data-cron="0 0 * * * *">Every Hour</button>
-              <button type="button" class="preset-btn" data-cron="0 0 0 * * *">Daily</button>
             </div>
             
             <div class="scheduler-actions" style="margin-top: 24px; display: flex; gap: 10px;">

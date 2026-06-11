@@ -826,23 +826,24 @@ skinny-placeholder { display: none; }
   color: var(--text-primary);
 }
 
-/* Cron Presets Badge Buttons */
-.preset-btn {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
+/* Clock Picker styling */
+.clock-picker-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
-
-.preset-btn:hover {
-  background: rgba(99, 102, 241, 0.1);
+.clock-picker-wrap input[type="time"] {
+  width: 100%;
+  padding-right: 40px;
+  cursor: pointer;
+}
+.clock-picker-icon {
+  position: absolute;
+  right: 12px;
+  font-size: 16px;
+  pointer-events: none;
   color: var(--accent-light);
-  border-color: rgba(99, 102, 241, 0.4);
 }
 
 /* Terminal Console View for Logs */
