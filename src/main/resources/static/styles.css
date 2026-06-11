@@ -615,7 +615,7 @@ body {
   position: fixed;
   bottom: 24px; right: 24px;
   display: flex; flex-direction: column; gap: 10px;
-  z-index: 300;
+  z-index: 1000;
 }
 .toast {
   display: flex;
