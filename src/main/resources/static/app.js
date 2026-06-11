@@ -37,7 +37,6 @@ const $deleteNameEl  = document.getElementById('delete-product-name');
 // Sidebar
 const $sidebar  = document.getElementById('sidebar');
 const $menuBtn  = document.getElementById('menu-btn');
-
 // ═══════════════════════════════════════════════════════════
 //  API HELPERS
 // ═══════════════════════════════════════════════════════════
@@ -55,13 +54,20 @@ async function apiFetch(url, options = {}) {
     throw new Error('Authentication expired or required. Please sign in again.');
   }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const contentType = res.headers.get('content-type');
+    let errMsg = `HTTP ${res.status}`;
+    if (contentType && contentType.includes('application/json')) {
+      const err = await res.json().catch(() => ({}));
+      errMsg = err.error || err.message || errMsg;
+    } else {
+      const text = await res.text().catch(() => '');
+      if (text) errMsg = text;
+    }
+    throw new Error(errMsg);
   }
   if (res.status === 204) return null;
   return res.json();
 }
-
 const api = {
   getAll:      ()         => apiFetch(API),
   getById:     (id)       => apiFetch(`${API}/${id}`),

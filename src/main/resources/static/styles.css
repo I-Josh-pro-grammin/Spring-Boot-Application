@@ -569,7 +569,7 @@ body {
 .form-group--full { grid-column: 1 / -1; }
 
 .form-group label {
-  font-size: 13px; font-weight: 500; color: var(--text-secondary);
+  font-size: 13px; font-weight: 500; color: #fff;
 }
 .form-group input,
 .form-group textarea,
