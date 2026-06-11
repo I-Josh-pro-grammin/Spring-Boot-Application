@@ -24,6 +24,10 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         Products
       </a>
+      <a href="#" class="nav-item" id="nav-scheduler">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Scheduler
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -58,8 +62,9 @@
       </button>
     </header>
 
-    <!-- Stats Cards -->
-    <section class="stats-grid" id="stats-grid">
+    <div id="products-panel">
+      <!-- Stats Cards -->
+      <section class="stats-grid" id="stats-grid">
       <div class="stat-card">
         <div class="stat-icon stat-icon--blue">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
@@ -153,6 +158,61 @@
     </div>
 
     <div class="pagination" id="pagination"></div>
+    </div> <!-- Close products-panel -->
+
+    <!-- ══════════════════════ SCHEDULER PANEL ══════════════════════ -->
+    <div id="scheduler-panel" style="display: none">
+      <div class="scheduler-layout">
+        <!-- Configuration Card -->
+        <div class="scheduler-card">
+          <div class="card-header">
+            <h3>Automation Settings</h3>
+            <p>Configure automatic inventory checks and rules.</p>
+          </div>
+          <form id="scheduler-form">
+            <div class="form-group" style="margin-top: 15px">
+              <label class="switch-container">
+                <input type="checkbox" id="scheduler-enabled" />
+                <span class="switch-slider"></span>
+                <span class="switch-label">Enable Automated Low Stock Checks</span>
+              </label>
+            </div>
+            
+            <div class="form-group" style="margin-top: 20px">
+              <label for="scheduler-cron">Cron Expression</label>
+              <input type="text" id="scheduler-cron" placeholder="e.g. 0 0 * * * *" required />
+              <small style="color:var(--text-muted); margin-top: 4px; display: block;">Spring Cron format (6 fields): second minute hour day month day-of-week</small>
+            </div>
+            
+            <div class="cron-presets" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="preset-btn" data-cron="*/10 * * * * *">Every 10s (Dev)</button>
+              <button type="button" class="preset-btn" data-cron="0 * * * * *">Every Minute</button>
+              <button type="button" class="preset-btn" data-cron="0 0 * * * *">Every Hour</button>
+              <button type="button" class="preset-btn" data-cron="0 0 0 * * *">Daily</button>
+            </div>
+            
+            <div class="scheduler-actions" style="margin-top: 24px; display: flex; gap: 10px;">
+              <button type="submit" class="btn-primary" id="btn-save-scheduler">Save Settings</button>
+              <button type="button" class="btn-secondary" id="btn-trigger-scheduler">Run Check Now</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Logs / Console Card -->
+        <div class="scheduler-card">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3>Scheduler Activity Logs</h3>
+              <p>Live execution logs and low stock notifications</p>
+            </div>
+            <button type="button" class="btn-tool" id="btn-clear-logs" style="border-color: rgba(239,68,68,0.2); color: #f87171; background: rgba(239,68,68,0.05); cursor: pointer;">Clear Logs</button>
+          </div>
+          <div class="logs-console" id="logs-console">
+            <div style="color: var(--text-muted); font-style: italic;">Loading logs...</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- ══════════════════════ CREATE/EDIT MODAL ══════════════════════ -->

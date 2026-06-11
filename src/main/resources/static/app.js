@@ -67,6 +67,13 @@ const api = {
   getByPriceRange: (min, max) => apiFetch(`${API}/price-range?min=${min}&max=${max}`),
   getInvValue:     (cat)      => apiFetch(`${API}/inventory-value?category=${encodeURIComponent(cat)}`),
   bulkUpdate:      (cat, pct) => apiFetch(`${API}/update-prices?category=${encodeURIComponent(cat)}&percentage=${pct}`, { method: 'PATCH' }),
+  
+  // Scheduler APIs
+  getSchedulerConfig:    ()     => apiFetch('/api/scheduler/config'),
+  updateSchedulerConfig: (data) => apiFetch('/api/scheduler/config', { method: 'POST', body: JSON.stringify(data) }),
+  triggerScheduler:      ()     => apiFetch('/api/scheduler/trigger', { method: 'POST' }),
+  getSchedulerLogs:      ()     => apiFetch('/api/scheduler/logs'),
+  clearSchedulerLogs:    ()     => apiFetch('/api/scheduler/logs', { method: 'DELETE' }),
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -540,6 +547,137 @@ function setTheme(theme) {
 $themeToggle.addEventListener('click', () => {
   const current = document.documentElement.getAttribute('data-theme');
   setTheme(current === 'light' ? 'dark' : 'light');
+});
+
+// ═══════════════════════════════════════════════════════════
+//  TAB NAVIGATION & SCHEDULER CONTROLLER
+// ═══════════════════════════════════════════════════════════
+let activeTab = 'products';
+let logPollInterval = null;
+
+const $navProducts = document.getElementById('nav-products');
+const $navScheduler = document.getElementById('nav-scheduler');
+const $productsPanel = document.getElementById('products-panel');
+const $schedulerPanel = document.getElementById('scheduler-panel');
+const $btnAddProduct = document.getElementById('btn-add-product');
+
+function switchTab(tab) {
+  activeTab = tab;
+  if (tab === 'products') {
+    $navProducts.classList.add('active');
+    $navScheduler.classList.remove('active');
+    $productsPanel.style.display = '';
+    $schedulerPanel.style.display = 'none';
+    $btnAddProduct.style.display = '';
+    document.querySelector('.page-title').textContent = 'Product Inventory';
+    document.querySelector('.page-sub').textContent = 'Manage your store catalogue';
+    
+    clearInterval(logPollInterval);
+    logPollInterval = null;
+  } else {
+    $navProducts.classList.remove('active');
+    $navScheduler.classList.add('active');
+    $productsPanel.style.display = 'none';
+    $schedulerPanel.style.display = 'block';
+    $btnAddProduct.style.display = 'none';
+    document.querySelector('.page-title').textContent = 'Automation & Scheduler';
+    document.querySelector('.page-sub').textContent = 'Dynamic task scheduling and logs';
+    
+    loadSchedulerConfig();
+    loadSchedulerLogs();
+    clearInterval(logPollInterval);
+    logPollInterval = setInterval(loadSchedulerLogs, 3000);
+  }
+}
+
+async function loadSchedulerConfig() {
+  try {
+    const config = await api.getSchedulerConfig();
+    document.getElementById('scheduler-enabled').checked = config.enabled;
+    document.getElementById('scheduler-cron').value = config.cronExpression;
+  } catch (err) {
+    showToast('Failed to load scheduler configuration: ' + err.message, 'error');
+  }
+}
+
+async function loadSchedulerLogs() {
+  const $logsConsole = document.getElementById('logs-console');
+  try {
+    const logs = await api.getSchedulerLogs();
+    if (logs.length === 0) {
+      $logsConsole.innerHTML = '<div style="color: var(--text-muted); font-style: italic;">No logs available yet.</div>';
+      return;
+    }
+    $logsConsole.innerHTML = logs.map(log => {
+      let colorClass = '';
+      if (log.includes('ERROR:')) colorClass = 'color: #f87171;';
+      else if (log.includes('WARNING:')) colorClass = 'color: #fbbf24;';
+      else if (log.includes('SUCCESS:')) colorClass = 'color: #34d399;';
+      return `<div style="${colorClass}">${escHtml(log)}</div>`;
+    }).join('');
+    $logsConsole.scrollTop = $logsConsole.scrollHeight;
+  } catch (err) {
+    $logsConsole.innerHTML = `<div style="color: #f87171;">Failed to load logs: ${escHtml(err.message)}</div>`;
+  }
+}
+
+// Event bindings
+$navProducts.addEventListener('click', (e) => { e.preventDefault(); switchTab('products'); });
+$navScheduler.addEventListener('click', (e) => { e.preventDefault(); switchTab('scheduler'); });
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('scheduler-cron').value = btn.dataset.cron;
+    showToast(`Preset selected: ${btn.textContent}`, 'success');
+  });
+});
+
+document.getElementById('scheduler-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const enabled = document.getElementById('scheduler-enabled').checked;
+  const cronExpression = document.getElementById('scheduler-cron').value.trim();
+  
+  const btn = document.getElementById('btn-save-scheduler');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  
+  try {
+    await api.updateSchedulerConfig({ enabled, cronExpression });
+    showToast('Scheduler configuration saved successfully!', 'success');
+    await loadSchedulerLogs();
+  } catch (err) {
+    showToast('Failed to save scheduler settings: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Settings';
+  }
+});
+
+document.getElementById('btn-trigger-scheduler').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-trigger-scheduler');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  
+  try {
+    await api.triggerScheduler();
+    showToast('Scheduled task triggered successfully!', 'success');
+    await loadSchedulerLogs();
+  } catch (err) {
+    showToast('Failed to trigger scheduler: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Check Now';
+  }
+});
+
+document.getElementById('btn-clear-logs').addEventListener('click', async () => {
+  try {
+    await api.clearSchedulerLogs();
+    showToast('Logs cleared.', 'success');
+    await loadSchedulerLogs();
+  } catch (err) {
+    showToast('Failed to clear logs: ' + err.message, 'error');
+  }
 });
 
 // ═══════════════════════════════════════════════════════════
