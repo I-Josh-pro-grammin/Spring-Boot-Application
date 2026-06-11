@@ -322,6 +322,8 @@ $productForm.addEventListener('submit', async (e) => {
       await api.create(data);
       showToast('Product created successfully!', 'success');
     }
+    $productForm.reset();
+    $productId.value = '';
     closeModal();
     await loadProducts();
   } catch (err) {
@@ -762,6 +764,7 @@ $loginForm.addEventListener('submit', async (e) => {
     const res = await api.login(email, password);
     localStorage.setItem('token', res.token);
     showToast('Signed in successfully!', 'success');
+    $loginForm.reset();
     checkAuth();
   } catch (err) {
     showToast('Login failed: ' + err.message, 'error');
@@ -785,6 +788,7 @@ $registerForm.addEventListener('submit', async (e) => {
     const res = await api.register(username, email, password);
     localStorage.setItem('token', res.token);
     showToast('Account created successfully!', 'success');
+    $registerForm.reset();
     checkAuth();
   } catch (err) {
     showToast('Registration failed: ' + err.message, 'error');
