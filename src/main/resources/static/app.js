@@ -49,7 +49,7 @@ async function apiFetch(url, options = {}) {
   const defaults = { headers };
 
   const res = await fetch(url, { ...defaults, ...options });
-  if (res.status === 401 || res.status === 403) {
+  if ((res.status === 401 || res.status === 403) && !url.includes('/api/auth/')) {
     logout();
     throw new Error('Authentication expired or required. Please sign in again.');
   }

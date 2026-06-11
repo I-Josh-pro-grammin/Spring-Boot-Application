@@ -39,14 +39,18 @@ public class authController {
 
     @PostMapping("login")
     public ResponseEntity login(@RequestBody LoginUserDto user) {
-        UserDto foundUser = userService.login(user);
+        try {
+            UserDto foundUser = userService.login(user);
 
-        if(foundUser == null) {
-            return new ResponseEntity("User not found", HttpStatusCode.valueOf(400));
+            if(foundUser == null) {
+                return new ResponseEntity("User not found", HttpStatusCode.valueOf(400));
+            }
+
+            String token = jwtService.generateToken(user.getEmail());
+
+            return ResponseEntity.ok(new LoginAndRegisterResponseDto(token));
+        } catch (RuntimeException e) {
+            return new ResponseEntity(e.getMessage(), HttpStatusCode.valueOf(400));
         }
-
-        String token = jwtService.generateToken(user.getEmail());
-
-        return ResponseEntity.ok(new LoginAndRegisterResponseDto(token));
     }
 }
