@@ -3,6 +3,8 @@ package org.josh.store.controller;
 import org.josh.store.scheduler.InventoryScheduler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.http.MediaType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +53,11 @@ public class SchedulingController {
     @GetMapping("/logs")
     public ResponseEntity<List<String>> getLogs() {
         return ResponseEntity.ok(inventoryScheduler.getLogs());
+    }
+
+    @GetMapping(value = "/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter handleEvents() {
+        return inventoryScheduler.subscribe();
     }
 
     @DeleteMapping("/logs")

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Component
 public class InventoryScheduler {
@@ -35,6 +36,32 @@ public class InventoryScheduler {
     private String cronExpression;
 
     private final List<String> logs = new CopyOnWriteArrayList<>();
+    private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
+
+    public SseEmitter subscribe() {
+        SseEmitter emitter = new SseEmitter(24 * 60 * 60 * 1000L);
+        this.emitters.add(emitter);
+        emitter.onCompletion(() -> this.emitters.remove(emitter));
+        emitter.onTimeout(() -> this.emitters.remove(emitter));
+        try {
+            emitter.send(SseEmitter.event().name("ping").data("connected"));
+        } catch (Exception e) {
+            this.emitters.remove(emitter);
+        }
+        return emitter;
+    }
+
+    private void broadcast(String eventName, Object data) {
+        List<SseEmitter> deadEmitters = new ArrayList<>();
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.send(SseEmitter.event().name(eventName).data(data));
+            } catch (Exception e) {
+                deadEmitters.add(emitter);
+            }
+        }
+        emitters.removeAll(deadEmitters);
+    }
 
     public InventoryScheduler(ProductService productService, ThreadPoolTaskScheduler taskScheduler) {
         this.productService = productService;
@@ -74,6 +101,7 @@ public class InventoryScheduler {
         logger.info("Starting scheduled low stock check...");
         try {
             List<Product> lowStockProducts = productService.getLowStockProducts(10);
+            broadcast("low-stock-check", lowStockProducts.size());
             if (lowStockProducts.isEmpty()) {
                 logger.info("No low stock products found.");
                 addLog("SUCCESS: Check finished. No low stock products found (threshold: 10).");
