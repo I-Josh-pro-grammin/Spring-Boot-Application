@@ -12,6 +12,7 @@ let filteredList   = [];
 let currentPage    = 1;
 let deleteTargetId = null;
 let searchDebounce = null;
+let sseSource      = null;
 
 // ─── DOM refs ─────────────────────────────────────────────────────────────────
 const $tbody         = document.getElementById('product-tbody');
@@ -776,6 +777,7 @@ const $btnLogout    = document.getElementById('btn-logout');
 
 function logout() {
   localStorage.removeItem('token');
+  disconnectSse();
   $authView.style.display = 'flex';
   document.getElementById('sidebar').style.display = 'none';
   document.querySelector('.main-content').style.display = 'none';
@@ -786,6 +788,7 @@ function logout() {
 function checkAuth() {
   const token = localStorage.getItem('token');
   if (!token) {
+    disconnectSse();
     $authView.style.display = 'flex';
     document.getElementById('sidebar').style.display = 'none';
     document.querySelector('.main-content').style.display = 'none';
@@ -795,6 +798,55 @@ function checkAuth() {
     document.querySelector('.main-content').style.display = '';
     switchTab('products');
     loadProducts();
+    connectSse();
+  }
+}
+
+function connectSse() {
+  if (sseSource) {
+    sseSource.close();
+    sseSource = null;
+  }
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const url = '/api/scheduler/events?token=' + encodeURIComponent(token);
+  sseSource = new EventSource(url);
+
+  sseSource.addEventListener('low-stock-check', (e) => {
+    const count = parseInt(e.data, 10);
+    if (count === 0) {
+      showToast('Automated Check: No low stock items found.', 'success');
+    } else {
+      showToast(`Automated Check: Found ${count} low stock items!`, 'warning');
+    }
+    
+    // Auto-update dashboard metrics if viewing relevant screen
+    if (activeTab === 'products') {
+      loadProducts();
+    } else if (activeTab === 'scheduler') {
+      loadSchedulerLogs();
+    }
+  });
+
+  sseSource.addEventListener('ping', () => {
+    // Keep alive ping
+  });
+
+  sseSource.onerror = () => {
+    if (sseSource) {
+      sseSource.close();
+      sseSource = null;
+    }
+    // Retry connection in 5 seconds
+    setTimeout(connectSse, 5000);
+  };
+}
+
+function disconnectSse() {
+  if (sseSource) {
+    sseSource.close();
+    sseSource = null;
   }
 }
 
